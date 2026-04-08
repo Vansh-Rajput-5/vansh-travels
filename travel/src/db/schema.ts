@@ -1,29 +1,32 @@
-import { sqliteTable, integer, text, real } from 'drizzle-orm/sqlite-core';
+export interface BookingDocument {
+  _id?: string;
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  pickup: string;
+  drop: string;
+  travelDate: string;
+  tripDays: number;
+  members: number;
+  destination: string;
+  vehicleType: string;
+  distance: number;
+  price: number;
+  paymentStatus: string;
+  paymentId: string | null;
+  createdAt: string;
+}
 
-// Bookings table
-export const bookings = sqliteTable('bookings', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  name: text('name').notNull(),
-  email: text('email').notNull(),
-  phone: text('phone').notNull(),
-  pickup: text('pickup').notNull(),
-  drop: text('drop').notNull(),
-  travelDate: text('travel_date').notNull(),
-  tripDays: integer('trip_days').notNull(),
-  members: integer('members').notNull(),
-  destination: text('destination').notNull(),
-  vehicleType: text('vehicle_type').notNull(), // Enum: Sedan, SUV, Tempo Traveller, Mini Bus
-  distance: real('distance').notNull(),
-  price: real('price').notNull(),
-  paymentStatus: text('payment_status').notNull().default('pending'), // Enum: pending, completed, failed
-  paymentId: text('payment_id'),
-  createdAt: text('created_at').notNull(),
-});
+export interface AdminDocument {
+  _id?: string;
+  id: number;
+  email: string;
+  password: string;
+  createdAt: string;
+}
 
-// Admin table
-export const admin = sqliteTable('admin', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  email: text('email').notNull().unique(),
-  password: text('password').notNull(), // Hashed with bcrypt
-  createdAt: text('created_at').notNull(),
-});
+export interface CounterDocument {
+  _id: string;
+  value: number;
+}

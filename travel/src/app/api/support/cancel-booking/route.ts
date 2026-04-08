@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq, or } from 'drizzle-orm';
-import { db } from '@/db';
-import { bookings } from '@/db/schema';
+import { getBookingsCollection, withoutMongoId } from '@/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,44 +19,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const contactCondition = email && phone
-      ? or(eq(bookings.email, email), eq(bookings.phone, phone))
-      : email
-        ? eq(bookings.email, email)
-        : eq(bookings.phone, phone!);
+    const contactFilters = [];
 
-    const matchingBookings = await db
-      .select()
-      .from(bookings)
-      .where(and(eq(bookings.id, bookingId), contactCondition!))
-      .limit(1);
+    if (email) {
+      contactFilters.push({ email });
+    }
 
-    if (matchingBookings.length === 0) {
+    if (phone) {
+      contactFilters.push({ phone });
+    }
+
+    const bookings = await getBookingsCollection();
+    const booking = await bookings.findOne({
+      id: bookingId,
+      ...(contactFilters.length === 1 ? contactFilters[0] : { $or: contactFilters }),
+    });
+
+    if (!booking) {
       return NextResponse.json(
         { error: 'No booking matched these details. Please check your booking ID and contact details.' },
         { status: 404 }
       );
     }
 
-    const booking = matchingBookings[0];
-
     if (booking.paymentStatus === 'cancelled') {
       return NextResponse.json(
-        { message: 'This booking is already cancelled.', booking },
+        { message: 'This booking is already cancelled.', booking: withoutMongoId(booking) },
         { status: 200 }
       );
     }
 
-    const updatedBooking = await db
-      .update(bookings)
-      .set({ paymentStatus: 'cancelled' })
-      .where(eq(bookings.id, bookingId))
-      .returning();
+    const updatedBooking = await bookings.findOneAndUpdate(
+      { id: bookingId },
+      { $set: { paymentStatus: 'cancelled' } },
+      { returnDocument: 'after' }
+    );
 
     return NextResponse.json(
       {
         message: 'Your booking has been cancelled successfully.',
-        booking: updatedBooking[0],
+        booking: withoutMongoId(updatedBooking!),
       },
       { status: 200 }
     );

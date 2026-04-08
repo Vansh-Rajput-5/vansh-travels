@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { bookings } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { getBookingsCollection, withoutMongoId } from '@/db';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'vansh-travels-secret-key-2024';
@@ -45,17 +43,18 @@ export async function PATCH(
       );
     }
 
-    const updatedBooking = await db
-      .update(bookings)
-      .set({ paymentStatus })
-      .where(eq(bookings.id, bookingId))
-      .returning();
+    const bookings = await getBookingsCollection();
+    const updatedBooking = await bookings.findOneAndUpdate(
+      { id: bookingId },
+      { $set: { paymentStatus } },
+      { returnDocument: 'after' }
+    );
 
-    if (updatedBooking.length === 0) {
+    if (!updatedBooking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
-    return NextResponse.json(updatedBooking[0], { status: 200 });
+    return NextResponse.json(withoutMongoId(updatedBooking), { status: 200 });
   } catch (error) {
     console.error('PATCH error:', error);
     return NextResponse.json(

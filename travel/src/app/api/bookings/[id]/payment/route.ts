@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { bookings } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { getBookingsCollection, withoutMongoId } from '@/db';
 
 const VALID_PAYMENT_STATUSES = ['pending', 'completed', 'failed', 'cancelled'];
 
@@ -28,20 +26,23 @@ export async function POST(
       );
     }
 
-    const updatedBooking = await db
-      .update(bookings)
-      .set({
-        paymentStatus,
-        paymentId: paymentId || null,
-      })
-      .where(eq(bookings.id, bookingId))
-      .returning();
+    const bookings = await getBookingsCollection();
+    const updatedBooking = await bookings.findOneAndUpdate(
+      { id: bookingId },
+      {
+        $set: {
+          paymentStatus,
+          paymentId: paymentId || null,
+        },
+      },
+      { returnDocument: 'after' }
+    );
 
-    if (updatedBooking.length === 0) {
+    if (!updatedBooking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
-    return NextResponse.json(updatedBooking[0], { status: 200 });
+    return NextResponse.json(withoutMongoId(updatedBooking), { status: 200 });
   } catch (error) {
     console.error('Payment confirmation error:', error);
     return NextResponse.json(
