@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBookingsCollection, getNextSequence, withoutMongoId } from '@/db';
 import { ensureBookingsSchema } from '@/db/ensureBookingsSchema';
+import { sendBookingConfirmationEmail } from '@/lib/email';
 
 const VALID_VEHICLE_TYPES = ['Sedan', 'SUV', 'Tempo Traveller', 'Mini Bus'];
 const VALID_PAYMENT_STATUSES = ['pending', 'completed', 'failed', 'cancelled'];
@@ -147,6 +148,12 @@ export async function POST(request: NextRequest) {
     };
 
     await bookings.insertOne(newBooking);
+
+    try {
+      await sendBookingConfirmationEmail(newBooking);
+    } catch (emailError) {
+      console.error('Booking confirmation email failed:', emailError);
+    }
 
     return NextResponse.json(newBooking, { status: 201 });
   } catch (error) {
