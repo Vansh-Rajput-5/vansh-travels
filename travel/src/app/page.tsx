@@ -1,7 +1,5 @@
 "use client"
 
-import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -9,29 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MapPin, Car, Shield, Clock, Plane, Star, TrendingUp, Award } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-const destinations = [
-  {
-    name: 'Kullu Manali',
-    description: 'Experience the breathtaking beauty of Himachal Pradesh with snow-capped mountains, lush valleys, and adventure activities.',
-    image: 'https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/project-uploads/82df6393-67b6-4305-a761-f89f7a4b3cad/generated_images/stunning-panoramic-view-of-kullu-manali--a4c51c82-20251112144536.jpg',
-    highlights: ['Adventure Sports', 'Scenic Beauty', 'Hill Stations'],
-    emoji: '🏔️'
-  },
-  {
-    name: 'Kedarnath',
-    description: 'Embark on a spiritual journey to one of the holiest shrines in India, nestled in the majestic Himalayas.',
-    image: 'https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/project-uploads/82df6393-67b6-4305-a761-f89f7a4b3cad/generated_images/majestic-kedarnath-temple-in-uttarakhand-ba082ccc-20251112144535.jpg',
-    highlights: ['Spiritual Journey', 'Temple Visit', 'Mountain Trek'],
-    emoji: '🕉️'
-  },
-  {
-    name: 'Mussoorie',
-    description: 'Discover the charm of the "Queen of Hills" with colonial architecture, misty valleys, and stunning viewpoints.',
-    image: 'https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/project-uploads/82df6393-67b6-4305-a761-f89f7a4b3cad/generated_images/beautiful-scenic-view-of-mussoorie-hill--1ceea0d8-20251112144535.jpg',
-    highlights: ['Hill Station', 'Cable Car', 'Colonial Heritage'],
-    emoji: '🌄'
-  }
-]
+import { destinations } from '@/constants/destinations'
+import { Heart, MessageCircle, Search, ArrowRight, Building, Bus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { useAuth } from '@/context/AuthContext'
+import { toast } from 'sonner'
 
 const features = [
   {
@@ -72,10 +52,70 @@ const stats = [
 ]
 
 export default function Home() {
+  const { user } = useAuth()
+  const [likedDestinations, setLikedDestinations] = useState<Set<string>>(new Set())
+  const [searchQuery, setSearchQuery] = useState("")
+  const sliderRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  const filteredDestinations = destinations.filter(dest => 
+    dest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    dest.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    dest.highlights.some(h => h.toLowerCase().includes(searchQuery.toLowerCase()))
+  )
+
+  // Reset scroll position when search results change
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ left: 0, behavior: 'instant' })
+    }
+  }, [searchQuery])
+
+  const scrollLeft = () => {
+    if (sliderRef.current) {
+      sliderRef.current.scrollBy({ left: -400, behavior: 'smooth' })
+    }
+  }
+
+  const scrollRight = () => {
+    if (sliderRef.current) {
+      sliderRef.current.scrollBy({ left: 400, behavior: 'smooth' })
+    }
+  }
+
+  const handleLike = (e: React.MouseEvent, destName: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!user) {
+      toast.error("Please login to save favorite destinations!")
+      return
+    }
+    setLikedDestinations(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(destName)) {
+        newSet.delete(destName)
+        toast.info(`Removed ${destName} from favorites`)
+      } else {
+        newSet.add(destName)
+        toast.success(`Added ${destName} to favorites! ❤️`)
+      }
+      return newSet
+    })
+  }
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const { current } = scrollContainerRef
+      const scrollAmount = 400
+      current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      })
+    }
+  }
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-      
+    <>
       {/* Hero Section with Enhanced Animations */}
       <section className="relative min-h-[700px] flex items-center justify-center overflow-hidden">
         {/* Animated Background */}
@@ -184,6 +224,55 @@ export default function Home() {
                 Explore Destinations 🌍
               </Button>
             </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.7 }}
+            className="mt-12 bg-white/95 backdrop-blur rounded-2xl p-3 flex flex-col md:flex-row items-center gap-4 max-w-4xl mx-auto shadow-2xl overflow-hidden"
+          >
+            <div className="flex-1 w-full relative flex items-center">
+              <Search className="w-6 h-6 text-slate-400 absolute left-4" />
+              <input 
+                type="text" 
+                placeholder="Search destinations, attractions, or activities..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-14 pl-14 pr-4 bg-transparent outline-none text-slate-800 text-lg placeholder:text-slate-500"
+              />
+            </div>
+            <Button 
+              onClick={() => {
+                document.getElementById('destinations')?.scrollIntoView({ behavior: 'smooth' })
+              }}
+              className="h-14 px-8 w-full md:w-auto bg-[#DC3545] hover:bg-[#c82333] text-white rounded-xl text-lg font-bold transition-colors shrink-0"
+            >
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.9 }}
+            className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm md:text-base font-semibold"
+          >
+            <span className="text-white/80 uppercase tracking-wider mr-2 text-xs font-bold">Popular:</span>
+             {['Manali', 'Leh', 'Goa', 'Shimla', 'Jaipur'].map((place) => (
+              <button 
+                onClick={() => {
+                  setSearchQuery(place)
+                  setTimeout(() => {
+                    document.getElementById('destinations')?.scrollIntoView({ behavior: 'smooth' })
+                  }, 100)
+                }}
+                key={place} 
+                className="bg-white/20 hover:bg-white text-white hover:text-slate-900 px-4 py-1.5 rounded-full backdrop-blur-md transition-colors shadow-sm flex items-center gap-2"
+              >
+                🇮🇳 {place}
+              </button>
+            ))}
           </motion.div>
         </motion.div>
 
@@ -328,23 +417,38 @@ export default function Home() {
                 Popular Dream Destinations
               </span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Explore our handpicked destinations for an unforgettable experience ✈️
-            </p>
+            <div className="flex justify-center gap-4 mb-4">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="rounded-full border-[#AC2424] text-[#AC2424] hover:bg-[#AC2424] hover:text-white"
+                onClick={() => scroll('left')}
+              >
+                <ChevronLeft size={24} />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="rounded-full border-[#AC2424] text-[#AC2424] hover:bg-[#AC2424] hover:text-white"
+                onClick={() => scroll('right')}
+              >
+                <ChevronRight size={24} />
+              </Button>
+            </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {destinations.map((destination, index) => (
-              <motion.div
+          <div 
+            ref={scrollContainerRef}
+            className="flex overflow-x-auto gap-6 pb-8 hide-scrollbar scroll-smooth snap-x min-h-[500px]"
+          >
+            {filteredDestinations.length > 0 ? (
+              filteredDestinations.map((destination, index) => (
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.7, delay: index * 0.2 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -15, scale: 1.02 }}
+                className="min-w-[300px] md:min-w-[350px] lg:min-w-[400px] snap-start"
               >
-                <Card className="overflow-hidden glow-card h-full group backdrop-blur-sm bg-white/95">
-                  <div className="relative h-72 overflow-hidden">
+                <Card className="overflow-hidden glow-card group backdrop-blur-sm bg-white/95 flex flex-col h-full relative">
+                  <div className="relative h-64 w-full overflow-hidden shrink-0">
                     <Image
                       src={destination.image}
                       alt={destination.name}
@@ -353,58 +457,84 @@ export default function Home() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     
-                    <motion.div 
-                      className="absolute top-4 right-4 text-6xl"
-                      animate={{ 
-                        rotate: [0, 10, -10, 0],
-                        scale: [1, 1.1, 1]
-                      }}
-                      transition={{ 
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
+                    <div 
+                      className="absolute top-4 right-4 text-6xl transition-transform duration-500 group-hover:scale-110"
                     >
                       {destination.emoji}
-                    </motion.div>
-                  </div>
-                  
-                  <CardHeader>
-                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      {destination.name}
-                    </CardTitle>
-                    <CardDescription className="text-base leading-relaxed text-gray-600">
-                      {destination.description}
-                    </CardDescription>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2 mb-6">
-                      {destination.highlights.map((highlight, i) => (
-                        <motion.span 
-                          key={i}
-                          className="bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 text-sm px-4 py-2 rounded-full font-medium border border-blue-200"
-                          whileHover={{ scale: 1.1 }}
-                        >
-                          {highlight}
-                        </motion.span>
-                      ))}
+                    </div>
+                      <div className="absolute top-4 left-4 bg-[#DC3545] text-white text-xs font-bold px-3 py-1.5 rounded-md shadow-lg z-10">
+                        BEST SELLING
+                      </div>
                     </div>
                     
-                    <Link href="/booking">
-                      <Button className="w-full glow-button text-white text-lg py-6 group">
-                        <Plane className="mr-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                        Book Now
-                      </Button>
-                    </Link>
-                  </CardContent>
+                    <div className="flex flex-col flex-grow">
+                      <CardHeader className="pb-2 px-6 pt-6">
+                        <div className="flex justify-between items-start mb-1">
+                          <CardTitle className="text-xl font-bold text-slate-800">
+                            {destination.name}
+                          </CardTitle>
+                          <button 
+                            onClick={(e) => handleLike(e, destination.name)}
+                            className={`transition-all hover:scale-110 ${likedDestinations.has(destination.name) ? 'text-red-500' : 'text-slate-300 hover:text-red-500'}`}
+                          >
+                            <Heart fill={likedDestinations.has(destination.name) ? 'currentColor' : 'none'} size={22} />
+                          </button>
+                        </div>
+                        <CardDescription className="text-lg leading-relaxed text-gray-600 line-clamp-2">
+                          {destination.description}
+                        </CardDescription>
+                      </CardHeader>
+                    
+                    <CardContent className="flex flex-col flex-grow justify-between mt-2 pt-0 px-6 pb-6">
 
-                  <motion.div
+                      <div className="mb-6">
+                        <p className="text-[13px] font-bold uppercase tracking-widest text-slate-500 mb-3">Tours Highlights</p>
+                        <div className="grid grid-cols-2 gap-y-2 gap-x-2">
+                          {destination.highlights.map((highlight, i) => (
+                            <div 
+                              key={i}
+                              className="flex items-center text-sm text-slate-700 font-medium whitespace-nowrap overflow-hidden text-ellipsis hover:translate-x-1 transition-transform"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-2 shrink-0" />
+                              {highlight}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 mt-auto pt-4 border-t border-slate-100">
+                        <Link href={`/booking?destination=${destination.name}`} className="flex-1">
+                          <Button className="w-full bg-[#DC3545] hover:bg-[#c82333] text-white font-bold h-11">
+                            <Plane className="mr-2 h-4 w-4" /> Book Now
+                          </Button>
+                        </Link>
+                        <Link href={`/reviews?destination=${destination.name}`} className="w-1/3">
+                          <Button variant="outline" className="w-full border-slate-300 text-slate-700 hover:bg-slate-50 font-bold h-11 text-xs">
+                            <MessageCircle className="mr-1.5 h-4 w-4" /> Reviews
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </div>
+
+                  <div
                     className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100 pointer-events-none"
                   />
                 </Card>
-              </motion.div>
-            ))}
+              </div>
+            ))
+          ) : (
+            <div className="w-full py-20 text-center">
+              <p className="text-2xl text-slate-400 font-medium">No destinations found for "{searchQuery}"</p>
+              <Button 
+                variant="link" 
+                className="mt-4 text-[#DC3545] font-bold text-lg"
+                onClick={() => setSearchQuery("")}
+              >
+                Clear all filters
+              </Button>
+            </div>
+          )}
           </div>
         </div>
       </section>
@@ -469,7 +599,6 @@ export default function Home() {
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </>
   )
 }

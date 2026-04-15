@@ -175,6 +175,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')?.trim();
     const paymentStatus = searchParams.get('paymentStatus');
     const vehicleType = searchParams.get('vehicleType');
+    const emailStr = searchParams.get('email');
 
     const query: Record<string, unknown> = {};
 
@@ -184,6 +185,10 @@ export async function GET(request: NextRequest) {
         { email: { $regex: search, $options: 'i' } },
         { phone: { $regex: search, $options: 'i' } },
       ];
+    }
+
+    if (emailStr) {
+      query.email = emailStr.toLowerCase();
     }
 
     if (paymentStatus && VALID_PAYMENT_STATUSES.includes(paymentStatus)) {

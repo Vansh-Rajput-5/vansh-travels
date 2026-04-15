@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react'
+import { Mail, Phone, MapPin } from 'lucide-react'
+import { FaFacebookF, FaInstagram, FaTwitter } from 'react-icons/fa'
 
 export default function Footer() {
   return (
@@ -62,8 +63,8 @@ export default function Footer() {
               </li>
               <li className="flex items-center">
                 <Phone className="mr-2 flex-shrink-0" size={18} />
-                <a href="tel:+919876543210" className="text-gray-400 hover:text-blue-400 transition-colors">
-                  +91 98765 43210
+                <a href="tel:+918685997685" className="text-gray-400 hover:text-blue-400 transition-colors">
+                  +91 86859 97685
                 </a>
               </li>
             </ul>
@@ -73,29 +74,29 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Follow Us</h4>
             <div className="flex space-x-4">
-              <a 
-                href="https://facebook.com" 
-                target="_blank" 
+              <a
+                href="https://facebook.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gray-800 p-3 rounded-full hover:bg-blue-600 transition-colors"
               >
-                <Facebook size={20} />
+                <FaFacebookF size={20} />
               </a>
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
+              <a
+                href="https://instagram.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gray-800 p-3 rounded-full hover:bg-pink-600 transition-colors"
               >
-                <Instagram size={20} />
+                <FaInstagram size={20} />
               </a>
-              <a 
-                href="https://twitter.com" 
-                target="_blank" 
+              <a
+                href="https://twitter.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gray-800 p-3 rounded-full hover:bg-blue-400 transition-colors"
               >
-                <Twitter size={20} />
+                <FaTwitter size={20} />
               </a>
             </div>
           </div>

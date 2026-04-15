@@ -1,7 +1,5 @@
 "use client"
 
-import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,48 +14,7 @@ import Image from 'next/image'
 const PRICE_PER_KM = 17
 const MEMBER_CHARGE_RATE = 0.1
 
-const destinations = [
-  {
-    value: 'Kullu Manali',
-    label: 'Kullu Manali',
-    image: 'https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/project-uploads/82df6393-67b6-4305-a761-f89f7a4b3cad/generated_images/stunning-panoramic-view-of-kullu-manali--a4c51c82-20251112144536.jpg'
-  },
-  {
-    value: 'Kedarnath',
-    label: 'Kedarnath',
-    image: 'https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/project-uploads/82df6393-67b6-4305-a761-f89f7a4b3cad/generated_images/majestic-kedarnath-temple-in-uttarakhand-ba082ccc-20251112144535.jpg'
-  },
-  {
-    value: 'Mussoorie',
-    label: 'Mussoorie',
-    image: 'https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/project-uploads/82df6393-67b6-4305-a761-f89f7a4b3cad/generated_images/beautiful-scenic-view-of-mussoorie-hill--1ceea0d8-20251112144535.jpg'
-  },
-  {
-    value: 'Shimla',
-    label: 'Shimla',
-    image: 'https://images.unsplash.com/photo-1626621331169-9f34a6d6f8e5'
-  },
-  {
-    value: 'Dharamshala',
-    label: 'Dharamshala',
-    image: 'https://images.unsplash.com/photo-1579687196544-08b5f6f9f5ba'
-  },
-  {
-    value: 'Rishikesh',
-    label: 'Rishikesh',
-    image: 'https://images.unsplash.com/photo-1603262110263-fb0112e7cc33'
-  },
-  {
-    value: 'Jaipur',
-    label: 'Jaipur',
-    image: 'https://images.unsplash.com/photo-1599661046827-dacde6976547'
-  },
-  {
-    value: 'Goa',
-    label: 'Goa',
-    image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2'
-  }
-]
+import { destinations } from '@/constants/destinations'
 
 export default function BookingPage() {
   const [formData, setFormData] = useState({
@@ -83,13 +40,30 @@ export default function BookingPage() {
   const [showPayment, setShowPayment] = useState(false)
   const distanceRequestRef = useRef(0)
 
-  const selectedDestination = destinations.find(d => d.value === formData.destination)
+  const selectedDestination = destinations.find(d => d.name === formData.destination)
 
-  const calculateTotalPrice = (distanceKm: number, membersValue: string) => {
+  const calculateTotalPrice = (distanceKm: number, membersValue: string, daysValue: string, vehicleType: string) => {
     const members = parseInt(membersValue, 10)
     const validMembers = Number.isNaN(members) || members <= 0 ? 1 : members
-    const basePrice = distanceKm * PRICE_PER_KM
-    return basePrice * (1 + validMembers * MEMBER_CHARGE_RATE)
+    const days = parseInt(daysValue, 10)
+    const validDays = Number.isNaN(days) || days <= 0 ? 1 : days
+    
+    let basePrice = distanceKm * PRICE_PER_KM
+    
+    // Scale by valid days naturally
+    basePrice = basePrice * validDays * validMembers
+    
+    // Per the user request: "only add 2% per day in booking and 2% on car and 1% in single member price"
+    // Apply 2% increase per day
+    basePrice = basePrice * Math.pow(1.02, validDays)
+    
+    // Apply 2% increase for a vehicle selection
+    if (vehicleType) basePrice *= 1.02
+    
+    // Apply 1% increase per single member
+    basePrice = basePrice * Math.pow(1.01, validMembers)
+
+    return basePrice
   }
 
   // Generate UPI payment URL
@@ -189,8 +163,8 @@ export default function BookingPage() {
       return
     }
 
-    setCalculatedPrice(calculateTotalPrice(distanceValue, formData.members))
-  }, [formData.distance, formData.members])
+    setCalculatedPrice(calculateTotalPrice(distanceValue, formData.members, formData.tripDays, formData.vehicleType))
+  }, [formData.distance, formData.members, formData.tripDays, formData.vehicleType])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -328,12 +302,8 @@ export default function BookingPage() {
 
   if (bookingCancelled) {
     return (
-      <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <div className="min-h-full flex flex-col relative overflow-hidden">
         <div className="absolute inset-0 travel-bg-light z-0" />
-
-        <div className="relative z-10">
-          <Navigation />
-        </div>
 
         <div className="flex-1 flex items-center justify-center py-12 px-4 relative z-10">
           <Card className="max-w-md mx-auto glow-card">
@@ -362,16 +332,13 @@ export default function BookingPage() {
           </Card>
         </div>
 
-        <div className="relative z-10">
-          <Footer />
-        </div>
       </div>
     )
   }
 
   if (bookingSuccess) {
     return (
-      <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <div className="min-h-full flex flex-col relative overflow-hidden">
         {/* Animated background */}
         <div className="absolute inset-0 travel-bg-light z-0" />
         <div className="absolute inset-0 z-0 opacity-30">
@@ -379,10 +346,6 @@ export default function BookingPage() {
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400 rounded-full filter blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
 
-        <div className="relative z-10">
-          <Navigation />
-        </div>
-        
         <div className="flex-1 flex items-center justify-center py-12 px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 50 }}
@@ -465,10 +428,6 @@ export default function BookingPage() {
             </Card>
           </motion.div>
         </div>
-        
-        <div className="relative z-10">
-          <Footer />
-        </div>
       </div>
     )
   }
@@ -477,17 +436,13 @@ export default function BookingPage() {
     const upiUrl = generateUpiUrl()
     
     return (
-      <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <div className="min-h-full flex flex-col relative overflow-hidden">
         {/* Animated gradient background */}
         <div className="absolute inset-0 travel-bg z-0" />
         <div className="absolute inset-0 z-0">
           <div className="absolute top-0 left-0 w-full h-full bg-black/20" />
         </div>
 
-        <div className="relative z-10">
-          <Navigation />
-        </div>
-        
         <div className="flex-1 flex items-center justify-center py-12 px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -622,16 +577,12 @@ export default function BookingPage() {
             </Card>
           </motion.div>
         </div>
-        
-        <div className="relative z-10">
-          <Footer />
-        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-full flex flex-col relative overflow-hidden">
       {/* Hero Section with Destination Background */}
       <div className="absolute top-0 left-0 w-full h-[500px] z-0">
         {selectedDestination ? (
@@ -696,10 +647,6 @@ export default function BookingPage() {
         </motion.div>
       </div>
 
-      <div className="relative z-10">
-        <Navigation />
-      </div>
-      
       <div className="flex-1 py-12 relative z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -836,8 +783,8 @@ export default function BookingPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {destinations.map((destination) => (
-                            <SelectItem key={destination.value} value={destination.value}>
-                              {destination.label}
+                            <SelectItem key={destination.name} value={destination.name}>
+                              {destination.emoji} {destination.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1008,9 +955,6 @@ export default function BookingPage() {
         </div>
       </div>
 
-      <div className="relative z-10">
-        <Footer />
-      </div>
     </div>
   )
 }

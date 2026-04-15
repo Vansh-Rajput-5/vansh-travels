@@ -4,6 +4,7 @@ import path from "node:path";
 const LOADER = path.resolve(__dirname, 'src/visual-edits/component-tagger-loader.js');
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: __dirname,
   images: {
     remotePatterns: [
       {
@@ -23,6 +24,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   turbopack: {
+    root: __dirname,
     rules: {
       "*.{jsx,tsx}": {
         loaders: [LOADER]

@@ -1,14 +1,12 @@
 "use client"
 
-import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Mail, Phone, MapPin, Clock, Send, Loader2, CircleHelp, Ban, CreditCard, BriefcaseBusiness } from 'lucide-react'
+import { Mail, Phone, MapPin, Clock, Send, Loader2, CircleHelp, Ban, CreditCard, BriefcaseBusiness, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 
@@ -50,6 +48,7 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [rating, setRating] = useState(5)
 
   const helpTopics = [
     {
@@ -75,6 +74,12 @@ export default function ContactPage() {
       title: 'General Query',
       description: 'Ask anything about routes, pricing, destinations, or travel planning.',
       icon: <CircleHelp className="w-5 h-5 text-green-600" />
+    },
+    {
+      value: 'leave-review',
+      title: 'Website Review & Rating',
+      description: 'Share your feedback about our website, packages or service quality.',
+      icon: <Star className="w-5 h-5 text-yellow-500" />
     }
   ]
 
@@ -134,6 +139,7 @@ export default function ContactPage() {
         subject: '',
         message: ''
       })
+      setRating(5)
 
       setTimeout(() => {
         setSubmitSuccess(false)
@@ -147,9 +153,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-
+    <>
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -546,7 +550,6 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </>
   )
 }

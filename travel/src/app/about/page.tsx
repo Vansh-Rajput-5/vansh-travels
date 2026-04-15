@@ -1,7 +1,5 @@
 "use client"
 
-import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { motion } from 'framer-motion'
 import { Award, Users, MapPin, Heart } from 'lucide-react'
@@ -54,9 +52,7 @@ const values = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-
+    <>
       {/* Hero Section */}
       <section className="relative h-[400px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -245,7 +241,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </>
   )
 }

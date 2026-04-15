@@ -1,5 +1,5 @@
 import { MongoClient, type Collection, type Db } from 'mongodb';
-import type { AdminDocument, BookingDocument, CounterDocument } from '@/db/schema';
+import type { AdminDocument, BookingDocument, CounterDocument, UserDocument, ReviewDocument, LikeDocument } from '@/db/schema';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -32,6 +32,21 @@ export async function getDb(): Promise<Db> {
 export async function getBookingsCollection(): Promise<Collection<BookingDocument>> {
   const db = await getDb();
   return db.collection<BookingDocument>('bookings');
+}
+
+export async function getUsersCollection(): Promise<Collection<UserDocument>> {
+  const db = await getDb();
+  return db.collection<UserDocument>('users');
+}
+
+export async function getReviewsCollection(): Promise<Collection<ReviewDocument>> {
+  const db = await getDb();
+  return db.collection<ReviewDocument>('reviews');
+}
+
+export async function getLikesCollection(): Promise<Collection<LikeDocument>> {
+  const db = await getDb();
+  return db.collection<LikeDocument>('likes');
 }
 
 export async function getAdminCollection(): Promise<Collection<AdminDocument>> {
