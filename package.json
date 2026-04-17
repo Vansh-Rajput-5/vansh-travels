@@ -1,4 +1,12 @@
 {
+  "name": "vansh-travels-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd travel && npm install && npm run build",
+    "start": "cd travel && npm start",
+    "dev": "cd travel && npm run dev"
+  },
   "dependencies": {
     "mongodb": "^7.1.1"
   }
