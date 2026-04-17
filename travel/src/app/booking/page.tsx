@@ -63,7 +63,8 @@ export default function BookingPage() {
     // Apply 1% increase per single member
     basePrice = basePrice * Math.pow(1.01, validMembers)
 
-    return basePrice
+    // Apply 90% discount — show only 10% as final price
+    return basePrice * 0.1
   }
 
   // Generate UPI payment URL
@@ -595,7 +596,7 @@ export default function BookingPage() {
           >
             <Image
               src={selectedDestination.image}
-              alt={selectedDestination.label}
+              alt={selectedDestination.name}
               fill
               className="object-cover"
               priority
